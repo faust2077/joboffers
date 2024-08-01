@@ -1,25 +1,58 @@
 package com.joboffers.domain.offers;
 
-import com.joboffers.domain.offers.dto.OfferDto;
+import com.joboffers.domain.offers.dto.JobOfferDto;
+import com.joboffers.domain.offers.dto.OfferRequestDto;
+import com.joboffers.domain.offers.dto.OfferResponseDto;
 
 class OfferMapper {
-    static OfferDto mapFromOffer(Offer offer) {
-                return OfferDto.builder()
-                        .id(offer.id())
-                        .companyName(offer.companyName())
-                        .position(offer.position())
-                        .salary(offer.salary())
-                        .url(offer.url())
-                        .build();
+
+    static OfferResponseDto mapFromOfferToOfferResponseDto(Offer offer) {
+        return OfferResponseDto.builder()
+                .id(offer.id())
+                .companyName(offer.companyName())
+                .position(offer.position())
+                .salary(offer.salary())
+                .url(offer.url())
+                .build();
     }
 
-    static Offer mapFromOfferDto(OfferDto offerDto) {
+    static OfferRequestDto mapFromOfferToOfferRequestDto(Offer offer) {
+        return OfferRequestDto.builder()
+                .id(offer.id())
+                .companyName(offer.companyName())
+                .position(offer.position())
+                .salary(offer.salary())
+                .url(offer.url())
+                .build();
+    }
+
+    static Offer mapFromOfferRequestDtoToOffer(OfferRequestDto offerRequestDto) {
         return Offer.builder()
-                .id(offerDto.id())
-                .companyName(offerDto.companyName())
-                .position(offerDto.position())
-                .salary(offerDto.salary())
-                .url(offerDto.url())
+                .id(offerRequestDto.id())
+                .companyName(offerRequestDto.companyName())
+                .position(offerRequestDto.position())
+                .salary(offerRequestDto.salary())
+                .url(offerRequestDto.url())
+                .build();
+    }
+
+    static Offer mapFromJobOfferResponseDtoToOffer(JobOfferDto jobOfferDto) {
+        return Offer.builder()
+                .id(jobOfferDto.id())
+                .companyName(jobOfferDto.companyName())
+                .position(jobOfferDto.position())
+                .salary(jobOfferDto.salary())
+                .url(jobOfferDto.url())
+                .build();
+    }
+
+    static OfferResponseDto mapFromJobOfferResponseDtoToOfferResponseDto(JobOfferDto jobOfferDto) {
+        return OfferResponseDto.builder()
+                .id(jobOfferDto.id())
+                .companyName(jobOfferDto.companyName())
+                .position(jobOfferDto.position())
+                .salary(jobOfferDto.salary())
+                .url(jobOfferDto.url())
                 .build();
     }
 }

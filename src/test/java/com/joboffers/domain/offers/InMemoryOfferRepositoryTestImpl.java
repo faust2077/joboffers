@@ -11,40 +11,21 @@ class InMemoryOfferRepositoryTestImpl implements OfferRepository {
 
     @Override
     public Offer save(Offer offer) {
+        if (existsByUrl(offer.url())) {
+            throw new OfferAlreadyExistsException(OfferExceptionMessageBuilder.buildOfferAlreadyExistsMessage(offer));
+        }
+
+        if (existsById(offer.id())) {
+            throw new DuplicateKeyException(OfferExceptionMessageBuilder.buildDuplicateKeyMessage(offer));
+        }
+
         inMemoryDatabase.put(offer.id(), offer);
         return offer;
     }
 
     @Override
-    public List<Offer> saveAll(List<Offer> offers) {
-        return offers.stream()
-                .map(this::save)
-                .toList();
-    }
-
-    @Override
     public Optional<Offer> getById(String id) {
         return Optional.ofNullable(inMemoryDatabase.get(id));
-    }
-
-    @Override
-    public Optional<Offer> getByCompanyName(String companyName) {
-        return Optional.ofNullable(inMemoryDatabase.get(companyName));
-    }
-
-    @Override
-    public Optional<Offer> getByPosition(String position) {
-        return Optional.ofNullable(inMemoryDatabase.get(position));
-    }
-
-    @Override
-    public Optional<Offer> getBySalary(String salary) {
-        return Optional.ofNullable(inMemoryDatabase.get(salary));
-    }
-
-    @Override
-    public Optional<Offer> getByUrl(String url) {
-        return Optional.ofNullable(inMemoryDatabase.get(url));
     }
 
     @Override
@@ -55,8 +36,27 @@ class InMemoryOfferRepositoryTestImpl implements OfferRepository {
     }
 
     @Override
-    public boolean existsById(String id) {
-        return inMemoryDatabase.containsKey(id);
+    public List<Offer> saveAll(List<Offer> offers) {
+        return offers.stream()
+                .map(this::save)
+                .toList();
     }
+
+    @Override
+    public boolean existsById(String id) {
+        return inMemoryDatabase.values()
+                .stream()
+                .map(Offer::id)
+                .anyMatch(currentId -> currentId.equals(id));
+    }
+
+    @Override
+    public boolean existsByUrl(String url) {
+        return inMemoryDatabase.values()
+                .stream()
+                .map(Offer::url)
+                .anyMatch(currentUrl -> currentUrl.equals(url));
+    }
+
 
 }

@@ -3,23 +3,17 @@ package com.joboffers.domain.offers;
 import java.util.List;
 import java.util.Optional;
 
-public interface OfferRepository
+interface OfferRepository
 {
-    Offer save(Offer offer) throws OfferAlreadyExistsException;
-
-    List<Offer> saveAll(List<Offer> offers);
+    Offer save(Offer offer);
 
     Optional<Offer> getById(String id);
 
-    Optional<Offer> getByCompanyName(String companyName);
+    boolean existsById(String id);
 
-    Optional<Offer> getByPosition(String position);
-
-    Optional<Offer> getBySalary(String salary);
-
-    Optional<Offer> getByUrl(String url);
+    boolean existsByUrl(String url);
 
     List<Offer> getAll();
 
-    boolean existsById(String id);
+    List<Offer> saveAll(List<Offer> offers);
 }

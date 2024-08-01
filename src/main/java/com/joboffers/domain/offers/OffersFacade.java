@@ -1,6 +1,7 @@
 package com.joboffers.domain.offers;
 
-import com.joboffers.domain.offers.dto.OfferDto;
+import com.joboffers.domain.offers.dto.OfferRequestDto;
+import com.joboffers.domain.offers.dto.OfferResponseDto;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -11,31 +12,33 @@ import static com.joboffers.domain.offers.OfferExceptionMessageBuilder.buildOffe
 @RequiredArgsConstructor
 public class OffersFacade {
 
+    private final OffersFetchAndSaveService offersFetchAndSaveService;
     private final OfferRepository repository;
 
-    public List<OfferDto> findAllOffers() {
+    public List<OfferResponseDto> findAllOffers() {
         return repository.getAll()
                 .stream()
-                .map(OfferMapper::mapFromOffer)
+                .map(OfferMapper::mapFromOfferToOfferResponseDto)
                 .toList();
     }
 
-    public OfferDto findOfferById(String id) {
+    public OfferResponseDto findOfferById(String id) {
         return repository.getById(id)
-                .map(OfferMapper::mapFromOffer)
+                .map(OfferMapper::mapFromOfferToOfferResponseDto)
                 .orElseThrow(() -> new OfferNotFoundException(buildOfferNotFoundMessage(id)));
     }
 
-    public OfferDto saveOffer(OfferDto offerDto) {
-
-        Offer offer = OfferMapper.mapFromOfferDto(offerDto);
-
-        if (repository.existsById(offer.id())) {
-            throw new OfferAlreadyExistsException(buildOfferAlreadyExistsMessage(offer));
-        }
-
+    public OfferResponseDto saveOffer(OfferRequestDto offerRequestDto) {
+        Offer offer = OfferMapper.mapFromOfferRequestDtoToOffer(offerRequestDto);
         Offer savedOffer = repository.save(offer);
-        return OfferMapper.mapFromOffer(savedOffer);
+        return OfferMapper.mapFromOfferToOfferResponseDto(savedOffer);
+    }
+
+    public List<OfferResponseDto> fetchAllThenSave() {
+        return offersFetchAndSaveService.fetchAllThenSave()
+                .stream()
+                .map(OfferMapper::mapFromOfferToOfferResponseDto)
+                .toList();
     }
 
 }
