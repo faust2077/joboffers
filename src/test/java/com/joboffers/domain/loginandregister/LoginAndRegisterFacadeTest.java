@@ -68,9 +68,7 @@ class LoginAndRegisterFacadeTest {
     void testRegistering_whenOldUserTryingToRegister_thenThrowsUserAlreadyExistsException() {
 
         // given
-        final UserRegisterDto USER = UserMapper.mapFromUserToUserRegisterDto(
-                new User("id", "username", "password")
-        );
+        final UserRegisterDto USER = new UserRegisterDto("username", "password");
 
         // when
         loginAndRegisterFacade.register(USER);
