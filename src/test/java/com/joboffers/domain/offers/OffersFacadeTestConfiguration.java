@@ -8,7 +8,7 @@ import java.util.UUID;
 class OffersFacadeTestConfiguration {
 
     private final OffersFetchAndSaveService offersFetchAndSaveService;
-    private OfferRepository offerRepository;
+    private final OfferRepository offerRepository;
 
     public OffersFacadeTestConfiguration() {
         this.offerRepository = new InMemoryOfferRepositoryTestImpl();
@@ -43,14 +43,9 @@ class OffersFacadeTestConfiguration {
         return this;
     }
 
-    OffersFacadeTestConfiguration populateRepository(OfferRepository repository) {
-        this.offerRepository = repository;
-        return this;
-    }
-
     private static List<Offer> createListOfPlainOffers(List<JobOfferDto> jobOfferDTOS) {
         return jobOfferDTOS.stream()
-                .map(OfferMapper::mapFromJobOfferResponseDtoToOffer)
+                .map(OfferMapper::mapFromJobOfferDtoToOffer)
                 .toList();
     }
 

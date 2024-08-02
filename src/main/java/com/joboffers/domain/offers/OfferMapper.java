@@ -36,7 +36,7 @@ class OfferMapper {
                 .build();
     }
 
-    static Offer mapFromJobOfferResponseDtoToOffer(JobOfferDto jobOfferDto) {
+    static Offer mapFromJobOfferDtoToOffer(JobOfferDto jobOfferDto) {
         return Offer.builder()
                 .id(jobOfferDto.id())
                 .companyName(jobOfferDto.companyName())
@@ -46,7 +46,7 @@ class OfferMapper {
                 .build();
     }
 
-    static OfferResponseDto mapFromJobOfferResponseDtoToOfferResponseDto(JobOfferDto jobOfferDto) {
+    static OfferResponseDto mapFromJobOfferDtoToOfferResponseDto(JobOfferDto jobOfferDto) {
         return OfferResponseDto.builder()
                 .id(jobOfferDto.id())
                 .companyName(jobOfferDto.companyName())

@@ -10,11 +10,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
-class OffersFacadeTest { // todo: change createForTest such that it dont accept any parameters
+class OffersFacadeTest {
 
-
-    private final InMemoryOfferRepositoryTestImpl testRepository = new InMemoryOfferRepositoryTestImpl();
-    private final OffersFacade offersFacade = new OffersFacadeTestConfiguration().populateRepository(testRepository)
+    private final OffersFacade offersFacade = new OffersFacadeTestConfiguration()
             .createOfferFacadeForTest();
 
     @Test
@@ -277,9 +275,9 @@ class OffersFacadeTest { // todo: change createForTest such that it dont accept 
         List<OfferResponseDto> actualJobOffersDTOsFetched = offersFacadeForRemoteTest.fetchAllThenSave();
 
         // then
-        OfferResponseDto expectedOffer1 = OfferMapper.mapFromJobOfferResponseDtoToOfferResponseDto(newJobOffer1);
-        OfferResponseDto expectedOffer2 = OfferMapper.mapFromJobOfferResponseDtoToOfferResponseDto(newJobOffer2);
-        OfferResponseDto expectedOffer3 = OfferMapper.mapFromJobOfferResponseDtoToOfferResponseDto(newJobOffer3);
+        OfferResponseDto expectedOffer1 = OfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer1);
+        OfferResponseDto expectedOffer2 = OfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer2);
+        OfferResponseDto expectedOffer3 = OfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer3);
 
         final var LIST_OF_ACTUAL_URLS = actualJobOffersDTOsFetched.stream()
                 .map(OfferResponseDto::url)

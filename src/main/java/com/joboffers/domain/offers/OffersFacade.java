@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-import static com.joboffers.domain.offers.OfferExceptionMessageBuilder.buildOfferAlreadyExistsMessage;
 import static com.joboffers.domain.offers.OfferExceptionMessageBuilder.buildOfferNotFoundMessage;
 
 @RequiredArgsConstructor

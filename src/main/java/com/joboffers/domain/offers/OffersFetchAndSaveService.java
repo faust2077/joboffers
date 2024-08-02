@@ -21,7 +21,7 @@ class OffersFetchAndSaveService {
     private Stream<Offer> fetchAll() {
         return offerFetcher.remoteFetchAll()
                 .stream()
-                .map(OfferMapper::mapFromJobOfferResponseDtoToOffer);
+                .map(OfferMapper::mapFromJobOfferDtoToOffer);
     }
 
     private boolean isNotExistingOffer(Offer offer) {

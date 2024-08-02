@@ -44,10 +44,7 @@ class InMemoryOfferRepositoryTestImpl implements OfferRepository {
 
     @Override
     public boolean existsById(String id) {
-        return inMemoryDatabase.values()
-                .stream()
-                .map(Offer::id)
-                .anyMatch(currentId -> currentId.equals(id));
+        return inMemoryDatabase.containsKey(id);
     }
 
     @Override
