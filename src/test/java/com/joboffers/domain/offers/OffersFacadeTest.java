@@ -50,10 +50,10 @@ class OffersFacadeTest {
                 "13 000 - 15 000 PLN",
                 "https://motorola.com/");
 
-        offersFacade.saveOffer(OfferMapper.mapFromOfferToOfferRequestDto(offer1));
-        offersFacade.saveOffer(OfferMapper.mapFromOfferToOfferRequestDto(offer2));
-        offersFacade.saveOffer(OfferMapper.mapFromOfferToOfferRequestDto(offer3));
-        offersFacade.saveOffer(OfferMapper.mapFromOfferToOfferRequestDto(offer4));
+        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer1));
+        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer2));
+        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer3));
+        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer4));
 
         // when
         List<OfferResponseDto> actualOffers = offersFacade.findAllOffers();
@@ -86,7 +86,7 @@ class OffersFacadeTest {
                 "Java CMS Developer",
                 "10 000 - 15 000 PLN",
                 "https://www.samsung.com/pl/");
-        offersFacade.saveOffer(OfferMapper.mapFromOfferToOfferRequestDto(offer));
+        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer));
 
         // when
         OfferResponseDto actualOfferResponseDto = offersFacade.findOfferById(OFFER_ID);
@@ -109,7 +109,7 @@ class OffersFacadeTest {
                 "10 000 - 15 000 PLN",
                 "https://www.samsung.com/pl/");
 
-        offersFacade.saveOffer(OfferMapper.mapFromOfferToOfferRequestDto(offer));
+        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer));
         assertThat(offersFacade.findAllOffers()).hasSize(1);
 
         // when
@@ -134,7 +134,7 @@ class OffersFacadeTest {
                 "Java CMS Developer",
                 "10 000 - 15 000 PLN",
                 "https://www.samsung.com/pl/");
-        OfferRequestDto mappedFromOffer = OfferMapper.mapFromOfferToOfferRequestDto(offer);
+        OfferRequestDto mappedFromOffer = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer);
 
         // when
         OfferResponseDto actualOfferResponseDto = offersFacade.saveOffer(mappedFromOffer);
@@ -163,8 +163,8 @@ class OffersFacadeTest {
                 "10 000 - 15 000 PLN",
                 "sushi.eu");
 
-        final OfferRequestDto FIRST_OFFER_SAVED = OfferMapper.mapFromOfferToOfferRequestDto(offer);
-        final OfferRequestDto OFFER_WITH_EXISTING_ID = OfferMapper.mapFromOfferToOfferRequestDto(doppelganger);
+        final OfferRequestDto FIRST_OFFER_SAVED = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer);
+        final OfferRequestDto OFFER_WITH_EXISTING_ID = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(doppelganger);
 
         // when
         offersFacade.saveOffer(FIRST_OFFER_SAVED);
@@ -193,8 +193,8 @@ class OffersFacadeTest {
                 "10 000 - 15 000 PLN",
                 URL);
 
-        final OfferRequestDto FIRST_OFFER_SAVED = OfferMapper.mapFromOfferToOfferRequestDto(offer);
-        final OfferRequestDto OFFER_WITH_EXISTING_URL = OfferMapper.mapFromOfferToOfferRequestDto(doppelganger);
+        final OfferRequestDto FIRST_OFFER_SAVED = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer);
+        final OfferRequestDto OFFER_WITH_EXISTING_URL = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(doppelganger);
 
         // when
         offersFacade.saveOffer(FIRST_OFFER_SAVED);
@@ -275,9 +275,9 @@ class OffersFacadeTest {
         List<OfferResponseDto> actualJobOffersDTOsFetched = offersFacadeForRemoteTest.fetchAllThenSave();
 
         // then
-        OfferResponseDto expectedOffer1 = OfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer1);
-        OfferResponseDto expectedOffer2 = OfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer2);
-        OfferResponseDto expectedOffer3 = OfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer3);
+        OfferResponseDto expectedOffer1 = TestOnlyOfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer1);
+        OfferResponseDto expectedOffer2 = TestOnlyOfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer2);
+        OfferResponseDto expectedOffer3 = TestOnlyOfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer3);
 
         final var LIST_OF_ACTUAL_URLS = actualJobOffersDTOsFetched.stream()
                 .map(OfferResponseDto::url)
