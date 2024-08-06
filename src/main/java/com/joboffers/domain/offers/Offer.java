@@ -1,4 +1,7 @@
 package com.joboffers.domain.offers;
 
-public interface Offer {
+import lombok.Builder;
+
+@Builder
+record Offer(String id, String companyName, String position, String salary, String url) {
 }
