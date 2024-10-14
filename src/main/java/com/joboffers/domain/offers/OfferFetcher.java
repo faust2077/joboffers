@@ -4,6 +4,6 @@ import com.joboffers.domain.offers.dto.JobOfferDto;
 
 import java.util.List;
 
-interface OfferFetcher {
+public interface OfferFetcher {
     List<JobOfferDto> remoteFetchAll();
 }

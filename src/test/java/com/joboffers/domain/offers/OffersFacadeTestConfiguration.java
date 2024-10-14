@@ -43,8 +43,8 @@ class OffersFacadeTestConfiguration {
         return this;
     }
 
-    private static List<Offer> createListOfPlainOffers(List<JobOfferDto> jobOfferDTOS) {
-        return jobOfferDTOS.stream()
+    private static List<Offer> createListOfPlainOffers(List<JobOfferDto> jobOfferDTOs) {
+        return jobOfferDTOs.stream()
                 .map(OfferMapper::mapFromJobOfferDtoToOffer)
                 .toList();
     }
