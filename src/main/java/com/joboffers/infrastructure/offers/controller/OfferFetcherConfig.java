@@ -29,9 +29,9 @@ public class OfferFetcherConfig {
     }
 
     @Bean
-    public OfferFetcher remoteFetchOffersClient(RestTemplate restTemplate,
-                                                @Value("${joboffers.offer-fetcher.http.client.config.uri}") String uri,
-                                                @Value("${joboffers.offer-fetcher.http.client.config.port}") int port) {
+    public OfferFetcher offerFetcher(RestTemplate restTemplate,
+                                     @Value("${joboffers.offer-fetcher.http.client.config.uri}") String uri,
+                                     @Value("${joboffers.offer-fetcher.http.client.config.port}") int port) {
         return new OfferFetcherRestTemplate(restTemplate, uri, port);
     }
 
