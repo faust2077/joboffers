@@ -8,10 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Configuration
-// po to, aby wszystkie beany byly dostepne w jednym miejscu a nie wielu
 public class OffersFacadeConfiguration {
 
-    // implementacja anonimowa na razie, aby wstal kontekst springa
     @Bean
     OfferRepository offerRepository() {
         return new OfferRepository() {
