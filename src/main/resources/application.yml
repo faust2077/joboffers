@@ -3,6 +3,9 @@ spring:
     mongodb:
       uri: mongodb://admin:0@localhost:27017/joboffers-web
 
+scheduling:
+  enabled: true
+
 joboffers:
   scheduler:
     request:
