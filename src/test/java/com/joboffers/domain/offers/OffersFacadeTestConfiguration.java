@@ -33,7 +33,7 @@ class OffersFacadeTestConfiguration {
         this.offersFetchAndSaveService = new OffersFetchAndSaveService(new InMemoryOfferFetcherTestImpl(remoteOffers), offerRepository);
     }
 
-    OffersFacade createOfferFacadeForTest() {
+    OffersFacade createOffersFacadeForTest() {
         return new OffersFacade(offersFetchAndSaveService, offerRepository);
     }
 

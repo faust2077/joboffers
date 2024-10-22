@@ -3,24 +3,24 @@ package com.joboffers.feature;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.joboffers.BaseIntegrationTest;
 import com.joboffers.domain.offers.OfferFetcher;
+import com.joboffers.domain.offers.OfferRepository;
 import com.joboffers.domain.offers.dto.JobOfferDto;
 import com.joboffers.infrastructure.offers.scheduler.JobOfferScheduler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class TypicalPathIntegrationTest extends BaseIntegrationTest implements SampleJobOfferDto {
 
     @Autowired
-    OfferFetcher offerFetcher;
+    private OfferFetcher offerFetcher;
+
+    @Autowired
+    private OfferRepository offerRepository;
 
     @Autowired
     private JobOfferScheduler offersFetchingScheduler;
@@ -41,28 +41,15 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         // when
         List<JobOfferDto> jobOfferDtoList = offerFetcher.remoteFetchAll();
         // then
-        assertNotNull(jobOfferDtoList);
-        assertTrue(jobOfferDtoList.isEmpty());
+        assertThat(jobOfferDtoList).isNotNull();
+        assertThat(jobOfferDtoList).isEmpty();
 
 //step 2: scheduler ran 1st time and made GET to external server and system added 0 offers to database
         // given
-        List<JobOfferDto> jobOffers = Arrays.asList(
-                new JobOfferDto(UUID.randomUUID().toString(),
-                        "Samsung",
-                        "Java CMS Developer",
-                        "10 000 - 15 000 PLN",
-                        "https://www.samsung.com/pl/"),
-                new JobOfferDto(UUID.randomUUID().toString(),
-                        "Ssangyong",
-                        "Java Developer",
-                        "15 000 - 17 000 PLN",
-                        "https://ssangyong-auto.pl/")
-        );
-        when(offerFetcher.remoteFetchAll()).thenReturn(jobOffers);
         // when
         offersFetchingScheduler.fetchAllOffersThenSave();
         // then
-        // todo: verify that offers are in the repository
+        assertThat(offerRepository.findAll()).isEmpty();
 //step 3: user tried to get JWT token by requesting POST /token with username=someUser, password=somePassword and system returned UNAUTHORIZED(401)
         // given
         // when

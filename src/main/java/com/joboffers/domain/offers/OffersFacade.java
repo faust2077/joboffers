@@ -15,14 +15,14 @@ public class OffersFacade {
     private final OfferRepository repository;
 
     public List<OfferResponseDto> findAllOffers() {
-        return repository.getAll()
+        return repository.findAll()
                 .stream()
                 .map(OfferMapper::mapFromOfferToOfferResponseDto)
                 .toList();
     }
 
     public OfferResponseDto findOfferById(String id) {
-        return repository.getById(id)
+        return repository.findById(id)
                 .map(OfferMapper::mapFromOfferToOfferResponseDto)
                 .orElseThrow(() -> new OfferNotFoundException(buildOfferNotFoundMessage(id)));
     }

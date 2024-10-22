@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.*;
 class OffersFacadeTest {
 
     private final OffersFacade offersFacade = new OffersFacadeTestConfiguration()
-            .createOfferFacadeForTest();
+            .createOffersFacadeForTest();
 
     @Test
     void testFindAll_whenNoneOffersFound_thenEmptyListReturned() {
@@ -266,7 +266,7 @@ class OffersFacadeTest {
                         jobOffer3,
                         jobOffer4
                 )
-        ).createOfferFacadeForTest();
+        ).createOffersFacadeForTest();
 
         final int EXPECTED_SIZE_AFTER_JUST_SAVE = 4;
         assertThat(offersFacadeForRemoteTest.findAllOffers()).hasSize(EXPECTED_SIZE_AFTER_JUST_SAVE);
@@ -294,7 +294,7 @@ class OffersFacadeTest {
         // given
         final List<JobOfferDto> EMPTY_LIST = List.of();
         OffersFacade offersFacade = new OffersFacadeTestConfiguration(EMPTY_LIST)
-                .createOfferFacadeForTest();
+                .createOffersFacadeForTest();
 
         // when
         List<OfferResponseDto> actualJobOffersDTOsFetched = offersFacade.fetchAllThenSave();

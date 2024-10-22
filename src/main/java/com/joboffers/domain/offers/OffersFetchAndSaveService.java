@@ -25,7 +25,8 @@ class OffersFetchAndSaveService {
     }
 
     private boolean isNotExistingOffer(Offer offer) {
-        return !offer.url().isEmpty() && !offerRepository.existsByUrl(offer.url());
+        String url = offer.url();
+        return url != null && !url.isEmpty() && !offerRepository.existsByUrl(url);
     }
 
 }
