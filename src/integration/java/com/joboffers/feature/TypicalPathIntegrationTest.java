@@ -18,6 +18,7 @@ import java.util.List;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TypicalPathIntegrationTest extends BaseIntegrationTest implements SampleJobOfferDto {
@@ -102,10 +103,20 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         // given
         // when
         // then
-// step 11: user made GET /offers/9999 and system returned NOT_FOUND(404) with message “Offer with id 9999 not found”
+// step 11: user made GET /offers/11000 and system returned NOT_FOUND(404) with message “Offer with id 11000 not found”
         // given
         // when
+        ResultActions offerWithNotExistingId = mockMvc.perform(get("/offers/11000"));
         // then
+        offerWithNotExistingId.andExpect(status().isNotFound())
+                .andExpect(content().json("""
+                        {
+                        "message": "Offer with id='11000' not found",
+                        "status": "NOT_FOUND"
+                        }
+                        """.trim()));
+
+
 //step 12: user made GET /offers/1000 and system returned OK(200) with offer
         // given
         // when

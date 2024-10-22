@@ -25,8 +25,8 @@ public class OffersRestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OfferResponseDto> findOfferById(@PathVariable Long id) {
-        OfferResponseDto offerById = offersFacade.findOfferById("");
+    public ResponseEntity<OfferResponseDto> findOfferById(@PathVariable String id) {
+        OfferResponseDto offerById = offersFacade.findOfferById(id);
         return ResponseEntity.ok(offerById);
     }
 
