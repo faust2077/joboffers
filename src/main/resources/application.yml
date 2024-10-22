@@ -1,7 +1,14 @@
+
+
 spring:
   data:
     mongodb:
       uri: mongodb://admin:0@localhost:27017/joboffers-web
+  main:
+    allow-bean-definition-overriding: true
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
 
 scheduling:
   enabled: true
