@@ -1,12 +1,8 @@
 package com.joboffers.domain.offers;
 
 class OfferExceptionMessageBuilder {
-    static String buildDuplicateKeyMessage(Offer offer) {
-        return String.format("Given key: id='%s' is already linked with another offer in the database", offer.id());
-    }
-
-    static String buildOfferAlreadyExistsMessage(Offer offer) {
-        return String.format("Offer with url='%s' already exists", offer.url());
+    static String buildDuplicateKeyMessage(String url) {
+        return String.format("Offer with url='%s' already exists", url);
     }
 
     static String buildOfferNotFoundMessage(String id) {

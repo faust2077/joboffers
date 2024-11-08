@@ -1,5 +1,6 @@
 package com.joboffers.domain.offers;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.FluentQuery;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
@@ -17,18 +19,32 @@ class InMemoryOfferRepositoryTestImpl implements OfferRepository {
 
     private final Map<String, Offer> inMemoryDatabase = new ConcurrentHashMap<>();
 
+    @SuppressWarnings("unchecked")
     @Override
     public <S extends Offer> S save(S entity) {
-        if (existsByUrl(entity.url())) {
-            throw new OfferAlreadyExistsException(OfferExceptionMessageBuilder.buildOfferAlreadyExistsMessage(entity));
+
+        final String url = entity.url();
+
+        if (existsByUrl(url)) {
+            throw new DuplicateKeyException(OfferExceptionMessageBuilder.buildDuplicateKeyMessage(url));
         }
 
-        if (existsById(entity.id())) {
-            throw new DuplicateKeyException(OfferExceptionMessageBuilder.buildDuplicateKeyMessage(entity));
-        }
+        final String ID = generateID();
 
-        inMemoryDatabase.put(entity.id(), entity);
-        return entity;
+        Offer savedOffer = new Offer(
+                ID,
+                entity.companyName(),
+                entity.position(),
+                entity.salary(),
+                url
+        );
+
+        inMemoryDatabase.put(savedOffer.id(), savedOffer);
+        return (S) savedOffer;
+    }
+
+    private String generateID() {
+        return UUID.randomUUID().toString();
     }
 
     @Override

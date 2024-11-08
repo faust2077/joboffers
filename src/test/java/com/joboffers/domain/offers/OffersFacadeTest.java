@@ -1,10 +1,12 @@
 package com.joboffers.domain.offers;
 
-import com.joboffers.domain.offers.dto.JobOfferDto;
+import com.joboffers.domain.offers.dto.HttpResponseOfferDto;
 import com.joboffers.domain.offers.dto.OfferRequestDto;
 import com.joboffers.domain.offers.dto.OfferResponseDto;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DuplicateKeyException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,49 +31,41 @@ class OffersFacadeTest {
     void testFindAll_whenAllOffersFound_thenSuccess() {
 
         // given
-        Offer offer1 = new Offer(UUID.randomUUID().toString(),
-                "Samsung",
+        OfferRequestDto offerRequestDto1 = new OfferRequestDto("Samsung",
                 "Java CMS Developer",
                 "10 000 - 15 000 PLN",
                 "https://www.samsung.com/pl/");
-        Offer offer2 = new Offer(UUID.randomUUID().toString(),
-                "Ssangyong",
+        OfferRequestDto offerRequestDto2 = new OfferRequestDto("Ssangyong",
                 "Java Developer",
                 "15 000 - 17 000 PLN",
                 "https://ssangyong-auto.pl/");
-        Offer offer3 = new Offer(UUID.randomUUID().toString(),
-                "Oracle",
+        OfferRequestDto offerRequestDto3 = new OfferRequestDto("Oracle",
                 "Java GC Engineer",
                 "18 000 - 25 000 PLN",
                 "https://www.oracle.com/pl/");
-        Offer offer4 = new Offer(UUID.randomUUID().toString(),
-                "Motorola",
+        OfferRequestDto offerRequestDto4 = new OfferRequestDto("Motorola",
                 "Java Developer",
                 "13 000 - 15 000 PLN",
                 "https://motorola.com/");
 
-        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer1));
-        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer2));
-        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer3));
-        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer4));
+        OfferResponseDto offerResponseDto1 = offersFacade.saveOffer(offerRequestDto1);
+        OfferResponseDto offerResponseDto2 = offersFacade.saveOffer(offerRequestDto2);
+        OfferResponseDto offerResponseDto3 = offersFacade.saveOffer(offerRequestDto3);
+        OfferResponseDto offerResponseDto4 = offersFacade.saveOffer(offerRequestDto4);
 
         // when
         List<OfferResponseDto> actualOffers = offersFacade.findAllOffers();
 
         // then
-        OfferResponseDto expectedOffer1 = OfferMapper.mapFromOfferToOfferResponseDto(offer1);
-        OfferResponseDto expectedOffer2 = OfferMapper.mapFromOfferToOfferResponseDto(offer2);
-        OfferResponseDto expectedOffer3 = OfferMapper.mapFromOfferToOfferResponseDto(offer3);
-        OfferResponseDto expectedOffer4 = OfferMapper.mapFromOfferToOfferResponseDto(offer4);
 
         final int EXPECTED_SIZE = 4;
 
         assertThat(actualOffers).hasSize(EXPECTED_SIZE);
         assertThat(actualOffers).containsExactlyInAnyOrder(
-                expectedOffer1,
-                expectedOffer2,
-                expectedOffer3,
-                expectedOffer4
+                offerResponseDto1,
+                offerResponseDto2,
+                offerResponseDto3,
+                offerResponseDto4
         );
     }
 
@@ -79,20 +73,22 @@ class OffersFacadeTest {
     void testFindById_whenOfferWithGivenIdFound_thenSuccess() {
 
         //given
-        final String OFFER_ID = UUID.randomUUID().toString();
+        final OfferRequestDto offerRequestDto = new OfferRequestDto("Samsung",
+                "Java CMS Developer",
+                "10 000 - 15 000 PLN",
+                "https://www.samsung.com/pl/");
+        final String id = offersFacade.saveOffer(offerRequestDto)
+                .id();
 
-        Offer offer = new Offer(OFFER_ID,
+        // when
+        OfferResponseDto actualOfferResponseDto = offersFacade.findOfferById(id);
+
+        // then
+        OfferResponseDto expectedOfferResponseDto = new OfferResponseDto(actualOfferResponseDto.id(),
                 "Samsung",
                 "Java CMS Developer",
                 "10 000 - 15 000 PLN",
                 "https://www.samsung.com/pl/");
-        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer));
-
-        // when
-        OfferResponseDto actualOfferResponseDto = offersFacade.findOfferById(OFFER_ID);
-
-        // then
-        OfferResponseDto expectedOfferResponseDto = OfferMapper.mapFromOfferToOfferResponseDto(offer);
 
         assertThat(actualOfferResponseDto).isEqualTo(expectedOfferResponseDto);
     }
@@ -101,19 +97,20 @@ class OffersFacadeTest {
     void testFindById_whenOfferWithGivenIdNotFound_thenThrowsOfferNotFoundException() {
 
         //given
-        final String NOT_PRESENT_ID = UUID.randomUUID().toString();
+        final String NOT_PRESENT_ID = UUID.randomUUID()
+                .toString();
 
-        Offer offer = new Offer(UUID.randomUUID().toString(),
+        OfferRequestDto offerRequestDto = new OfferRequestDto(
                 "Samsung",
                 "Java CMS Developer",
                 "10 000 - 15 000 PLN",
                 "https://www.samsung.com/pl/");
 
-        offersFacade.saveOffer(TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer));
+        offersFacade.saveOffer(offerRequestDto);
         assertThat(offersFacade.findAllOffers()).hasSize(1);
 
         // when
-        Throwable thrown = catchThrowable( () -> offersFacade.findOfferById(NOT_PRESENT_ID) );
+        Throwable thrown = catchThrowable(() -> offersFacade.findOfferById(NOT_PRESENT_ID));
 
         // then
         final String OFFER_NOT_FOUND = OfferExceptionMessageBuilder.buildOfferNotFoundMessage(NOT_PRESENT_ID);
@@ -127,84 +124,50 @@ class OffersFacadeTest {
     void testSave_whenSavingNewOffer_thenSuccess() {
 
         // given
-        final String ID = UUID.randomUUID().toString();
+        final OfferRequestDto offerRequestDto = new OfferRequestDto("Samsung",
+                "Java CMS Developer",
+                "10 000 - 15 000 PLN",
+                "https://www.samsung.com/pl/");
 
-        final Offer offer = new Offer(ID,
+        // when
+        OfferResponseDto actualOfferResponseDto = offersFacade.saveOffer(offerRequestDto);
+
+        // then
+        OfferResponseDto actualOfferById = offersFacade.findOfferById(actualOfferResponseDto.id());
+        OfferResponseDto expectedOfferResponseDto = new OfferResponseDto(actualOfferResponseDto.id(),
                 "Samsung",
                 "Java CMS Developer",
                 "10 000 - 15 000 PLN",
                 "https://www.samsung.com/pl/");
-        OfferRequestDto mappedFromOffer = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer);
-
-        // when
-        OfferResponseDto actualOfferResponseDto = offersFacade.saveOffer(mappedFromOffer);
-
-        // then
-        OfferResponseDto actualOfferById = offersFacade.findOfferById(ID);
-        OfferResponseDto expectedOfferResponseDto = OfferMapper.mapFromOfferToOfferResponseDto(offer);
 
         assertThat(actualOfferById).isEqualTo(expectedOfferResponseDto);
         assertThat(actualOfferResponseDto).isEqualTo(expectedOfferResponseDto);
     }
 
     @Test
-    void testSave_whenSavingOfferThatAlreadyExistsById_thenThrowsDuplicateKeyException() {
-
+    void testSave_whenSavingOfferThatAlreadyExistsByUrl_thenThrowsDuplicateKeyException() {
         // given
-        final String ID = UUID.randomUUID().toString();
-        final Offer offer = new Offer(ID,
+        final String URL = "someURL";
+        final OfferRequestDto offer = new OfferRequestDto(
                 "Samsung",
                 "Java CMS Developer",
                 "10 000 - 15 000 PLN",
-                "https://www.samsung.com/pl/");
-        final Offer doppelganger = new Offer(ID,
-                "Sushi",
+                URL);
+        final OfferRequestDto doppelganger = new OfferRequestDto(
+                "Samsung",
                 "Java CMS Developer",
                 "10 000 - 15 000 PLN",
-                "sushi.eu");
-
-        final OfferRequestDto FIRST_OFFER_SAVED = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer);
-        final OfferRequestDto OFFER_WITH_EXISTING_ID = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(doppelganger);
+                URL);
 
         // when
-        offersFacade.saveOffer(FIRST_OFFER_SAVED);
-        Throwable thrown = catchThrowable( () -> offersFacade.saveOffer(OFFER_WITH_EXISTING_ID) );
+        offersFacade.saveOffer(offer);
+        Throwable thrown = catchThrowable(() -> offersFacade.saveOffer(doppelganger));
 
         // then
-        final String DUPLICATE_KEY = OfferExceptionMessageBuilder.buildDuplicateKeyMessage(offer);
+        final String OFFER_ALREADY_EXISTS = OfferExceptionMessageBuilder.buildDuplicateKeyMessage(offer.url());
 
         assertThat(thrown)
                 .isInstanceOf(DuplicateKeyException.class)
-                .hasMessageContaining(DUPLICATE_KEY);
-    }
-
-    @Test
-    void testSave_whenSavingOfferThatAlreadyExistsByUrl_thenThrowsOfferAlreadyExistsException() {
-        // given
-        final String URL = "someURL";
-        final Offer offer = new Offer("UUID.randomUUID().toString()",
-                "Samsung",
-                "Java CMS Developer",
-                "10 000 - 15 000 PLN",
-                URL);
-        final Offer doppelganger = new Offer("randomUUID",
-                "Samsung",
-                "Java CMS Developer",
-                "10 000 - 15 000 PLN",
-                URL);
-
-        final OfferRequestDto FIRST_OFFER_SAVED = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(offer);
-        final OfferRequestDto OFFER_WITH_EXISTING_URL = TestOnlyOfferMapper.mapFromOfferToOfferRequestDto(doppelganger);
-
-        // when
-        offersFacade.saveOffer(FIRST_OFFER_SAVED);
-        Throwable thrown = catchThrowable( () -> offersFacade.saveOffer(OFFER_WITH_EXISTING_URL) );
-
-        // then
-        final String OFFER_ALREADY_EXISTS = OfferExceptionMessageBuilder.buildOfferAlreadyExistsMessage(offer);
-
-        assertThat(thrown)
-                .isInstanceOf(OfferAlreadyExistsException.class)
                 .hasMessageContaining(OFFER_ALREADY_EXISTS);
     }
 
@@ -212,44 +175,47 @@ class OffersFacadeTest {
     void testFetchAllThenSave_whenAllOffersFetched_andOnlyOffersWithNewUrlSaved_thenSuccess() {
 
         // given
-        JobOfferDto jobOffer1 = new JobOfferDto("a",
+        HttpResponseOfferDto jobOffer1 = new HttpResponseOfferDto("a",
                 "Samsung",
                 "Java CMS Developer",
                 "10 000 - 15 000 PLN",
                 "https://www.samsung.com/pl/");
-        JobOfferDto jobOffer2 = new JobOfferDto("b",
+        HttpResponseOfferDto jobOffer2 = new HttpResponseOfferDto("b",
                 "Ssangyong",
                 "Java Android Auto Developer",
                 "15 000 - 17 000 PLN",
                 "https://ssangyong-auto.pl/");
-        JobOfferDto jobOffer3 = new JobOfferDto("UUID.randomUUID().toString()",
+        HttpResponseOfferDto jobOffer3 = new HttpResponseOfferDto("UUID.randomUUID().toString()",
                 "Oracle",
                 "Java GC Engineer",
                 "18 000 - 25 000 PLN",
                 "https://www.oracle.com/pl/");
-        JobOfferDto jobOffer4 = new JobOfferDto("10",
+        HttpResponseOfferDto jobOffer4 = new HttpResponseOfferDto("10",
                 "Motorola",
                 "Java Mobile Developer",
                 "13 000 - 15 000 PLN",
                 "https://motorola.com/");
 
-        JobOfferDto newJobOffer1 = new JobOfferDto(UUID.randomUUID().toString(),
+        HttpResponseOfferDto newJobOffer1 = new HttpResponseOfferDto(UUID.randomUUID()
+                .toString(),
                 "Vimeo",
                 "Java Movie Player Developer",
                 "19 000 - 22 000 PLN",
                 "youtube.com");
-        JobOfferDto newJobOffer2 = new JobOfferDto(UUID.randomUUID().toString(),
+        HttpResponseOfferDto newJobOffer2 = new HttpResponseOfferDto(UUID.randomUUID()
+                .toString(),
                 "Go",
                 "Java Google Developer",
                 "19 000 - 24 000 PLN",
                 "google.com");
-        JobOfferDto newJobOffer3 = new JobOfferDto(UUID.randomUUID().toString(),
+        HttpResponseOfferDto newJobOffer3 = new HttpResponseOfferDto(UUID.randomUUID()
+                .toString(),
                 "Allegretto",
                 "Java Allegretto Developer",
                 "9 000 - 11 000 PLN",
                 "allegretto.pl");
 
-        final List<JobOfferDto> REMOTE_JOB_OFFERS = List.of(
+        final List<HttpResponseOfferDto> REMOTE_JOB_OFFERS = List.of(
                 jobOffer1,
                 jobOffer2,
                 jobOffer3,
@@ -260,13 +226,14 @@ class OffersFacadeTest {
         );
 
         OffersFacade offersFacadeForRemoteTest = new OffersFacadeTestConfiguration(REMOTE_JOB_OFFERS).populateRepository(
-                List.of(
-                        jobOffer1,
-                        jobOffer2,
-                        jobOffer3,
-                        jobOffer4
+                        List.of(
+                                jobOffer1,
+                                jobOffer2,
+                                jobOffer3,
+                                jobOffer4
+                        )
                 )
-        ).createOffersFacadeForTest();
+                .createOffersFacadeForTest();
 
         final int EXPECTED_SIZE_AFTER_JUST_SAVE = 4;
         assertThat(offersFacadeForRemoteTest.findAllOffers()).hasSize(EXPECTED_SIZE_AFTER_JUST_SAVE);
@@ -275,9 +242,9 @@ class OffersFacadeTest {
         List<OfferResponseDto> actualJobOffersDTOsFetched = offersFacadeForRemoteTest.fetchAllThenSave();
 
         // then
-        OfferResponseDto expectedOffer1 = TestOnlyOfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer1);
-        OfferResponseDto expectedOffer2 = TestOnlyOfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer2);
-        OfferResponseDto expectedOffer3 = TestOnlyOfferMapper.mapFromJobOfferDtoToOfferResponseDto(newJobOffer3);
+        OfferResponseDto expectedOffer1 = TestOnlyOfferMapper.mapFromHttpResponseOfferDtoToOfferResponseDto(newJobOffer1);
+        OfferResponseDto expectedOffer2 = TestOnlyOfferMapper.mapFromHttpResponseOfferDtoToOfferResponseDto(newJobOffer2);
+        OfferResponseDto expectedOffer3 = TestOnlyOfferMapper.mapFromHttpResponseOfferDtoToOfferResponseDto(newJobOffer3);
 
         final var LIST_OF_ACTUAL_URLS = actualJobOffersDTOsFetched.stream()
                 .map(OfferResponseDto::url)
@@ -292,7 +259,7 @@ class OffersFacadeTest {
     void testFetchAllThenSave_whenNoneOffersFetched_thenNoneOffersSaved_andEmptyListReturned() {
 
         // given
-        final List<JobOfferDto> EMPTY_LIST = List.of();
+        final List<HttpResponseOfferDto> EMPTY_LIST = Collections.emptyList();
         OffersFacade offersFacade = new OffersFacadeTestConfiguration(EMPTY_LIST)
                 .createOffersFacadeForTest();
 

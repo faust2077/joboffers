@@ -1,7 +1,7 @@
 package com.joboffers.infrastructure.offers.http;
 
 import com.joboffers.domain.offers.OfferFetcher;
-import com.joboffers.domain.offers.dto.JobOfferDto;
+import com.joboffers.domain.offers.dto.HttpResponseOfferDto;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.core.ParameterizedTypeReference;
@@ -22,7 +22,7 @@ public class OfferFetcherRestTemplate implements OfferFetcher {
     private final int port;
 
     @Override
-    public List<JobOfferDto> remoteFetchAll() {
+    public List<HttpResponseOfferDto> remoteFetchAll() {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -36,14 +36,14 @@ public class OfferFetcherRestTemplate implements OfferFetcher {
             final String URL = UriComponentsBuilder.fromHttpUrl(serviceUrl)
                     .toUriString();
 
-            ResponseEntity<List<JobOfferDto>> response = restTemplate.exchange(
+            ResponseEntity<List<HttpResponseOfferDto>> response = restTemplate.exchange(
                     URL,
                     HttpMethod.GET,
                     REQUEST_ENTITY,
                     new ParameterizedTypeReference<>() {}
             );
 
-            final List<JobOfferDto> BODY = response.getBody();
+            final List<HttpResponseOfferDto> BODY = response.getBody();
             if (BODY == null) {
                 log.info("Response body was null. Returning empty list.");
                 return Collections.emptyList();

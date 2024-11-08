@@ -1,6 +1,6 @@
 package com.joboffers.domain.offers;
 
-import com.joboffers.domain.offers.dto.JobOfferDto;
+import com.joboffers.domain.offers.dto.HttpResponseOfferDto;
 import com.joboffers.domain.offers.dto.OfferRequestDto;
 import com.joboffers.domain.offers.dto.OfferResponseDto;
 
@@ -18,7 +18,6 @@ class OfferMapper {
 
     static Offer mapFromOfferRequestDtoToOffer(OfferRequestDto offerRequestDto) {
         return Offer.builder()
-                .id(offerRequestDto.id())
                 .companyName(offerRequestDto.companyName())
                 .position(offerRequestDto.position())
                 .salary(offerRequestDto.salary())
@@ -26,13 +25,13 @@ class OfferMapper {
                 .build();
     }
 
-    static Offer mapFromJobOfferDtoToOffer(JobOfferDto jobOfferDto) {
+    static Offer mapFromHttpResponseOfferDtoToOffer(HttpResponseOfferDto httpResponseOfferDto) {
         return Offer.builder()
-                .id(jobOfferDto.id())
-                .companyName(jobOfferDto.companyName())
-                .position(jobOfferDto.position())
-                .salary(jobOfferDto.salary())
-                .url(jobOfferDto.url())
+                .id(httpResponseOfferDto.id())
+                .companyName(httpResponseOfferDto.companyName())
+                .position(httpResponseOfferDto.position())
+                .salary(httpResponseOfferDto.salary())
+                .url(httpResponseOfferDto.url())
                 .build();
     }
 
