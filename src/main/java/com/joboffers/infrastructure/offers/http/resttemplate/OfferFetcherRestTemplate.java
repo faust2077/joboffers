@@ -1,4 +1,4 @@
-package com.joboffers.infrastructure.offers.http;
+package com.joboffers.infrastructure.offers.http.resttemplate;
 
 import com.joboffers.domain.offers.OfferFetcher;
 import com.joboffers.domain.offers.dto.HttpResponseOfferDto;
@@ -6,11 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Collections;
 import java.util.List;
 
 @AllArgsConstructor
@@ -30,8 +29,7 @@ public class OfferFetcherRestTemplate implements OfferFetcher {
         final HttpEntity<HttpHeaders> REQUEST_ENTITY = new HttpEntity<>(headers);
 
         try {
-            final String SERVICE = "/offers";
-            String serviceUrl = getServiceUrl(SERVICE);
+            String serviceUrl = getServiceUrl();
 
             final String URL = UriComponentsBuilder.fromHttpUrl(serviceUrl)
                     .toUriString();
@@ -45,18 +43,27 @@ public class OfferFetcherRestTemplate implements OfferFetcher {
 
             final List<HttpResponseOfferDto> BODY = response.getBody();
             if (BODY == null) {
-                log.info("Response body was null. Returning empty list.");
-                return Collections.emptyList();
+                log.error("Response body was null. Returning empty list.");
+                throw new ResponseStatusException(HttpStatus.NO_CONTENT);
             }
             log.info("Successfully retrieved list of offers.");
             return BODY;
         } catch (ResourceAccessException e) {
-            log.error("Error while fetching offers using http client: {}", e.getMessage());
-            return Collections.emptyList();
+            log.error("Connection error while fetching offers using http client: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP Client-side error while fetching offers using http client: {}", e.getMessage());
+            throw new ResponseStatusException(e.getStatusCode());
+        } catch (HttpServerErrorException e) {
+            log.error("HTTP Server-side error while fetching offers using http client: {}", e.getMessage());
+            throw new ResponseStatusException(e.getStatusCode());
+        } catch (RestClientException e) {
+            log.error("Unexpected error while fetching offers using http client: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private String getServiceUrl(String service) {
-        return uri + ':' + port + service;
+    private String getServiceUrl() {
+        return uri + ':' + port + "/offers";
     }
 }

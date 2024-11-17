@@ -10,7 +10,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 class OffersFacadeTest {
 
@@ -19,8 +20,7 @@ class OffersFacadeTest {
 
     @Test
     void testFindAll_whenNoneOffersFound_thenEmptyListReturned() {
-        // given
-        // when
+        // given && when
         List<OfferResponseDto> actualOffers = offersFacade.findAllOffers();
 
         // then
@@ -57,7 +57,6 @@ class OffersFacadeTest {
         List<OfferResponseDto> actualOffers = offersFacade.findAllOffers();
 
         // then
-
         final int EXPECTED_SIZE = 4;
 
         assertThat(actualOffers).hasSize(EXPECTED_SIZE);

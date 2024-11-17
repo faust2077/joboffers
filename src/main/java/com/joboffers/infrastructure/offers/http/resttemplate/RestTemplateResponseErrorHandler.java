@@ -1,4 +1,4 @@
-package com.joboffers.infrastructure.offers.http;
+package com.joboffers.infrastructure.offers.http.resttemplate;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -20,17 +20,17 @@ public class RestTemplateResponseErrorHandler extends DefaultResponseErrorHandle
         if (STATUS_CODE.is5xxServerError()) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, HTTP_REQUEST_FAILURE_MESSAGE);
         } else if (STATUS_CODE.is4xxClientError()) {
-            HttpStatus httpStatusEnumValue = Objects.requireNonNull(
-                    HttpStatus.resolve(STATUS_CODE.value())
-            );
-            switch (httpStatusEnumValue) {
-                case NOT_FOUND:
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-                case UNAUTHORIZED:
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-                default:
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            switch (resolveHttpStatus(STATUS_CODE)) {
+                case NOT_FOUND -> throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                case UNAUTHORIZED -> throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+                default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
             }
         }
+    }
+
+    private static HttpStatus resolveHttpStatus(HttpStatusCode STATUS_CODE) {
+        return Objects.requireNonNull(
+                HttpStatus.resolve(STATUS_CODE.value())
+        );
     }
 }

@@ -1,4 +1,4 @@
-package com.joboffers.infrastructure.offers.http;
+package com.joboffers.infrastructure.offers.http.resttemplate;
 
 import com.joboffers.domain.offers.OfferFetcher;
 import org.springframework.beans.factory.annotation.Value;

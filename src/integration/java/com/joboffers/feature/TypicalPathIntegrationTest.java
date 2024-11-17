@@ -2,12 +2,15 @@ package com.joboffers.feature;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.joboffers.BaseIntegrationTest;
+import com.joboffers.SampleJobOfferDto;
 import com.joboffers.domain.offers.OfferRepository;
 import com.joboffers.domain.offers.OfferResponseDtoRepositoryLookup;
 import com.joboffers.domain.offers.dto.OfferResponseDto;
 import com.joboffers.infrastructure.offers.scheduler.JobOfferScheduler;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -19,6 +22,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -30,7 +34,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TypicalPathIntegrationTest extends BaseIntegrationTest implements SampleJobOfferDto {
 
     @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(
+            DockerImageName.parse("mongo:4.0.10")
+    );
+
+    @RegisterExtension
+    public static WireMockExtension wireMockServer = WireMockExtension.newInstance()
+            .options(wireMockConfig().dynamicPort())
+            .build();
 
     @DynamicPropertySource
     public static void propertyOverride(DynamicPropertyRegistry registry) {
@@ -258,8 +269,9 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
                         "url": "https://offers/offer/13412"
                         }
                         """.trim())
-                .contentType(APPLICATION_JSON_VALUE + ";charset=utf-8")
+                .contentType(APPLICATION_JSON_VALUE)
         );
+
         // then
         String createdOfferJson = performPostOffers.andExpect(status().isCreated())
                 .andReturn()
@@ -281,15 +293,17 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         ResultActions performGetOffersAfterPost = mockMvc.perform(get(offersEndpoint)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
-        String oneOfferJson = performGetOffersAfterPost.andExpect(status().isOk())
+        String fiveOffersJson = performGetOffersAfterPost.andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        List<OfferResponseDto> oneOfferParsedJson = objectMapper.readValue(oneOfferJson, new TypeReference<>() {
+        List<OfferResponseDto> fiveOffers = objectMapper.readValue(fiveOffersJson, new TypeReference<>() {
         });
 
-        assertThat(oneOfferParsedJson).hasSize(5);
-        assertThat(oneOfferParsedJson.stream()
+        final int EXPECTED_FINAL_OFFERS_LIST_SIZE = 5;
+
+        assertThat(fiveOffers).hasSize(EXPECTED_FINAL_OFFERS_LIST_SIZE);
+        assertThat(fiveOffers.stream()
                 .map(OfferResponseDto::id)).contains(id);
     }
 }

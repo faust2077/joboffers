@@ -1,4 +1,4 @@
-package com.joboffers.infrastructure.offers.error;
+package com.joboffers.infrastructure.offers.controller.error;
 
 import com.joboffers.domain.offers.OfferNotFoundException;
 import lombok.extern.log4j.Log4j2;

@@ -16,7 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class OfferUrlAlreadyExistsErrorIntegrationTest extends BaseIntegrationTest {
 
     @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(
+            DockerImageName.parse("mongo:4.0.10")
+    );
 
     @DynamicPropertySource
     public static void propertyOverride(DynamicPropertyRegistry registry) {
@@ -26,8 +28,7 @@ public class OfferUrlAlreadyExistsErrorIntegrationTest extends BaseIntegrationTe
     @Test
     public void should_return_409_conflict_when_user_posted_offer_with_existing_url() throws Exception {
         // step 1
-        // given
-        // when
+        // given && when
         ResultActions postOfferFirstTime = mockMvc.perform(post("/offers")
                 .content("""
                         {
@@ -43,8 +44,7 @@ public class OfferUrlAlreadyExistsErrorIntegrationTest extends BaseIntegrationTe
 
 
         // step 2
-        // given
-        // when
+        // given && when
         ResultActions postOfferSecondTime = mockMvc.perform(post("/offers")
                 .content("""
                         {

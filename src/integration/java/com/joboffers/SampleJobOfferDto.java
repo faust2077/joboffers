@@ -1,4 +1,4 @@
-package com.joboffers.feature;
+package com.joboffers;
 
 public interface SampleJobOfferDto {
     default String bodyWithZeroOffersJson() {
