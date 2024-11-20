@@ -80,13 +80,33 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 
 //step 3: user tried to get JWT token by requesting POST /token with username=someUser, password=somePassword and system returned UNAUTHORIZED(401)
-        // given
-        // when
+        // given && when
+        ResultActions performPostTokenByNotRegisteredUser = mockMvc.perform(post("/token")
+                .content("""
+                        {
+                            "username": "someUser",
+                            "password": "somePassword"
+                        }
+                        """.trim())
+                .contentType(APPLICATION_JSON_VALUE));
         // then
+        performPostTokenByNotRegisteredUser.andExpect(status().isUnauthorized())
+                .andExpect(content().json("""
+                    {
+                        "message": "Bad Credentials. User with the username: someUser has no account linked",
+                        "status": "UNAUTHORIZED"
+                    }
+                    """.trim()));
+
+
 //step 4: user made GET /offers with no jwt token and system returned UNAUTHORIZED
-        // given
-        // when
+        // given && when
+        ResultActions performGetOffersWithNoToken = mockMvc.perform(get(offersEndpoint)
+                .contentType(APPLICATION_JSON_VALUE));
         // then
+        performGetOffersWithNoToken.andExpect(status().isUnauthorized());
+
+
 //step 5: user made POST /register with username=someUser, password=somePassword and system registered user with status OK(200)
         // given
         // when

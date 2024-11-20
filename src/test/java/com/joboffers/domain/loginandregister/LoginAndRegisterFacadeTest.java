@@ -4,6 +4,8 @@ import com.joboffers.domain.loginandregister.dto.RegisterResultDto;
 import com.joboffers.domain.loginandregister.dto.UserDto;
 import com.joboffers.domain.loginandregister.dto.UserRegisterDto;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -30,7 +32,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void testFindByUsername_whenUserNotFound_thenThrowsUserNotFoundException() {
+    void testFindByUsername_whenUserNotFound_thenThrowsBadCredentialsException() {
 
         // given
         final String USERNAME = "username";
@@ -42,7 +44,7 @@ class LoginAndRegisterFacadeTest {
         final String USER_NOT_FOUND = LoginAndRegisterExceptionMessageBuilder.buildUserNotFoundMessage(USERNAME);
 
         assertThat(thrown)
-                .isInstanceOf(UserNotFoundException.class)
+                .isInstanceOf(BadCredentialsException.class)
                 .hasMessageContaining(USER_NOT_FOUND);
     }
 
@@ -65,7 +67,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void testRegistering_whenOldUserTryingToRegister_thenThrowsUserAlreadyExistsException() {
+    void testRegistering_whenOldUserTryingToRegister_thenThrowsDuplicateKeyException() {
 
         // given
         final UserRegisterDto USER = new UserRegisterDto("username", "password");
@@ -82,7 +84,7 @@ class LoginAndRegisterFacadeTest {
         );
 
         assertThat(thrown)
-                .isInstanceOf(UserAlreadyExistsException.class)
+                .isInstanceOf(DuplicateKeyException.class)
                 .hasMessageContaining(USER_ALREADY_EXISTS);
     }
 

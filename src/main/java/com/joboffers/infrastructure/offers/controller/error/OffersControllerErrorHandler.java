@@ -1,6 +1,7 @@
 package com.joboffers.infrastructure.offers.controller.error;
 
 import com.joboffers.domain.offers.OfferNotFoundException;
+import com.joboffers.infrastructure.offers.controller.OffersRestController;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.dao.DuplicateKeyException;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ControllerAdvice
+@ControllerAdvice(basePackageClasses = OffersRestController.class)
 @Log4j2
 public class OffersControllerErrorHandler {
 
@@ -27,7 +28,7 @@ public class OffersControllerErrorHandler {
     @ResponseBody
     @ExceptionHandler(DuplicateKeyException.class)
     public OffersPostErrorResponse handleDuplicateKeyException() {
-        String message = "Offer with given url already exists";
+        final String message = "Offer with given url already exists";
         log.error(message);
         return new OffersPostErrorResponse(message, HttpStatus.CONFLICT);
     }

@@ -40,6 +40,7 @@ class InMemoryOfferRepositoryTestImpl implements OfferRepository {
         );
 
         inMemoryDatabase.put(savedOffer.id(), savedOffer);
+
         return (S) savedOffer;
     }
 
