@@ -23,6 +23,7 @@
         <assertj-core.version>3.25.3</assertj-core.version>
         <testcontainers.version>1.19.8</testcontainers.version>
         <wiremock-jetty.version>3.9.0</wiremock-jetty.version>
+        <java-jwt.version>4.4.0</java-jwt.version>
     </properties>
 
     <dependencies>
@@ -108,6 +109,11 @@
                     <artifactId>commons-fileupload</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>${java-jwt.version}</version>
         </dependency>
     </dependencies>
 

@@ -5,10 +5,11 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.joboffers.BaseIntegrationTest;
 import com.joboffers.SampleJobOfferDto;
+import com.joboffers.domain.loginandregister.dto.RegisterResultDto;
 import com.joboffers.domain.offers.OfferRepository;
-import com.joboffers.domain.offers.OfferResponseDtoRepositoryLookup;
 import com.joboffers.domain.offers.dto.OfferResponseDto;
 import com.joboffers.infrastructure.offers.scheduler.JobOfferScheduler;
+import com.joboffers.infrastructure.security.jwt.dto.JwtResponseDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -76,7 +78,9 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         // given && when
         offersFetchingScheduler.fetchAllOffersThenSave();
         // then
-        assertThat(OfferResponseDtoRepositoryLookup.findAll(offerRepository)).isEmpty();
+        List<OfferResponseDto> noneOffersInRepositoryList = offerRepository.findAllMappedToOfferResponseDto();
+
+        assertThat(noneOffersInRepositoryList).isEmpty();
 
 
 //step 3: user tried to get JWT token by requesting POST /token with username=someUser, password=somePassword and system returned UNAUTHORIZED(401)
@@ -99,7 +103,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
                     """.trim()));
 
 
-//step 4: user made GET /offers with no jwt token and system returned UNAUTHORIZED
+//step 4: user made GET /offers with no jwt token and system returned UNAUTHORIZED(401)
         // given && when
         ResultActions performGetOffersWithNoToken = mockMvc.perform(get(offersEndpoint)
                 .contentType(APPLICATION_JSON_VALUE));
@@ -108,16 +112,60 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 
 //step 5: user made POST /register with username=someUser, password=somePassword and system registered user with status OK(200)
-        // given
-        // when
+        // given && when
+        ResultActions performPostRegister = mockMvc.perform(post("/register")
+                .content("""
+                         {
+                            "username": "someUser",
+                            "password": "somePassword"
+                         }
+                         """)
+                .contentType(APPLICATION_JSON_VALUE));
         // then
-//step 6: user tried to get JWT token by requesting POST /token with username=someUser, password=somePassword and system returned OK(200) and jwttoken=AAAA.BBBB.CCC
-        // given
-        // when
+        String registeredUserJson = performPostRegister.andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        RegisterResultDto registeredUserObject = objectMapper.readValue(registeredUserJson, RegisterResultDto.class);
+
+        assertAll(
+                () -> assertThat(registeredUserObject.id()).isNotNull(),
+                () -> assertThat(registeredUserObject.created()).isTrue(),
+                () -> assertThat(registeredUserObject.username()).isEqualTo("someUser")
+        );
+
+
+//step 6: user tried to get JWT token by requesting POST /token with username=someUser, password=somePassword and system returned OK(200) and token=AAAA.BBBB.CCC
+        // given && when
+        ResultActions successLoginRequest = mockMvc.perform(post("/token")
+                .content("""
+                        {
+                            "username": "someUser",
+                            "password": "somePassword"
+                        }
+                        """.trim())
+                .contentType(APPLICATION_JSON_VALUE));
         // then
-//step 7: user made GET /offers with header “Authorization: Bearer AAAA.BBBB.CCC” and system returned OK(200) with 0 offers
+        String jwtResponseJson = successLoginRequest.andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        JwtResponseDto jwtResponseDto = objectMapper.readValue(jwtResponseJson, JwtResponseDto.class);
+
+
+        final String JWT_REGEX = "^([A-Za-z0-9-_=]+\\.)+([A-Za-z0-9-_=])+\\.?$";
+        final String token = jwtResponseDto.token();
+
+        assertAll(
+                () -> assertThat(jwtResponseDto.username()).isEqualTo("someUser"),
+                () -> assertThat(token).matches(Pattern.compile(JWT_REGEX))
+        );
+
+
+//step 7: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 0 offers
         // given && when
         ResultActions performGetOffersWhenOffersAbsent = mockMvc.perform(get(offersEndpoint)
+                        .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
         String jsonWithOffers = performGetOffersWhenOffersAbsent.andExpect(status().isOk())
@@ -146,13 +194,19 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         // given && when
         offersFetchingScheduler.fetchAllOffersThenSave();
         // then
-        List<OfferResponseDto> allOffersInRepository = OfferResponseDtoRepositoryLookup.findAll(offerRepository);
-        assertThat(allOffersInRepository).hasSize(2);
+        List<OfferResponseDto> twoOffersInRepositoryList = offerRepository.findAllMappedToOfferResponseDto();
+        List<String> twoOffersInRepositoryIdsList = twoOffersInRepositoryList.stream()
+                .map(OfferResponseDto::id)
+                .toList();
+
+        assertThat(twoOffersInRepositoryList).hasSize(2);
+        assertThat(twoOffersInRepositoryIdsList).doesNotContainNull();
 
 
-//step 10: user made GET /offers with header “Authorization: Bearer AAAA.BBBB.CCC” and system returned OK(200) with 2 offers with ids: id1 and id2
+//step 10: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 2 offers with ids: id1 and id2
         // given && when
         ResultActions performGetTwoOffersByIds = mockMvc.perform(get(offersEndpoint)
+                .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
         String jsonWithTwoOffers = performGetTwoOffersByIds.andExpect(status().isOk())
@@ -166,18 +220,18 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         assertThat(twoOffers).isNotNull();
         assertThat(twoOffers).hasSize(2);
 
-
-        List<OfferResponseDto> twoOffersInRepositoryList = OfferResponseDtoRepositoryLookup.findAll(offerRepository);
         OfferResponseDto expectedFirstOffer = twoOffersInRepositoryList.get(0);
         OfferResponseDto expectedSecondOffer = twoOffersInRepositoryList.get(1);
 
         assertThat(twoOffers).containsExactlyInAnyOrder(
-                new OfferResponseDto(expectedFirstOffer.id(),
+                new OfferResponseDto(
+                        expectedFirstOffer.id(),
                         expectedFirstOffer.companyName(),
                         expectedFirstOffer.position(),
                         expectedFirstOffer.salary(),
                         expectedFirstOffer.url()),
-                new OfferResponseDto(expectedSecondOffer.id(),
+                new OfferResponseDto(
+                        expectedSecondOffer.id(),
                         expectedSecondOffer.companyName(),
                         expectedSecondOffer.position(),
                         expectedSecondOffer.salary(),
@@ -185,11 +239,13 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         );
 
 
-// step 11: user made GET /offers/11000 and system returned NOT_FOUND(404) with message “Offer with id 11000 not found”
+// step 11: user made GET /offers/11000 with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned NOT_FOUND(404) with message “Offer with id 11000 not found”
         // given
         final String offers11000 = offersEndpoint + "/11000";
         // when
-        ResultActions performGetOffersWithNotExistingId = mockMvc.perform(get(offers11000));
+        ResultActions performGetOffersWithNotExistingId = mockMvc.perform(get(offers11000)
+                .header("Authorization", "Bearer " + token)
+        );
         // then
         performGetOffersWithNotExistingId.andExpect(status().isNotFound())
                 .andExpect(content().json("""
@@ -200,12 +256,13 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
                         """.trim()));
 
 
-//step 12: user made GET /offers/id1 and system returned OK(200) with offer
+//step 12: user made GET /offers/id1 with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with offer
         // given
         final String id1 = expectedFirstOffer.id();
         final String offersId1Endpoint = offersEndpoint + '/' + id1;
         // when
         ResultActions performGetOffersById1 = mockMvc.perform(get(offersId1Endpoint)
+                .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
         String jsonWithOneOffer = performGetOffersById1.andExpect(status().isOk())
@@ -233,12 +290,19 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         // given && when
         offersFetchingScheduler.fetchAllOffersThenSave();
         // then
-        assertThat(OfferResponseDtoRepositoryLookup.findAll(offerRepository)).hasSize(4);
+        List<OfferResponseDto> fourOffersInRepositoryList = offerRepository.findAllMappedToOfferResponseDto();
+        List<String> fourOffersInRepositoryIdsList = fourOffersInRepositoryList.stream()
+                .map(OfferResponseDto::id)
+                .toList();
+
+        assertThat(fourOffersInRepositoryList).hasSize(4);
+        assertThat(fourOffersInRepositoryIdsList).doesNotContainNull();
 
 
-//step 15: user made GET /offers with header “Authorization: Bearer AAAA.BBBB.CCC” and system returned OK(200) with 4 offers with ids: id1, id2, id3, id4
+//step 15: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 4 offers with ids: id1, id2, id3, id4
         // given && when
         ResultActions performGetOffers = mockMvc.perform(get(offersEndpoint)
+                .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
         String jsonWithFourOffers = performGetOffers.andExpect(status().isOk())
@@ -250,8 +314,6 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
         assertThat(fourOffers).isNotNull();
         assertThat(fourOffers).hasSize(4);
-
-        List<OfferResponseDto> fourOffersInRepositoryList = OfferResponseDtoRepositoryLookup.findAll(offerRepository);
 
         final OfferResponseDto expectedOffer1 = fourOffersInRepositoryList.stream()
                 .filter(offer -> offer.url()
@@ -266,21 +328,24 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
                 .orElseThrow(() -> new AssertionError("Expected offer 2 not found"));
 
         assertThat(fourOffers).contains(
-                new OfferResponseDto(expectedOffer1.id(),
+                new OfferResponseDto(
+                        expectedOffer1.id(),
                         expectedOffer1.companyName(),
                         expectedOffer1.position(),
                         expectedOffer1.salary(),
                         expectedOffer1.url()),
-                new OfferResponseDto(expectedOffer2.id(),
+                new OfferResponseDto(
+                        expectedOffer2.id(),
                         expectedOffer2.companyName(),
                         expectedOffer2.position(),
                         expectedOffer2.salary(),
                         expectedOffer2.url())
         );
 
-//step 16: user made POST /offers with header “Authorization: Bearer AAAA.BBBB.CCC” and system returned CREATED(201) with saved offer
+//step 16: user made POST /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned CREATED(201) with saved offer
         // given && when
         ResultActions performPostOffers = mockMvc.perform(post(offersEndpoint)
+                .header("Authorization", "Bearer " + token)
                 .content("""
                         {
                         "companyName": "someCompanyName",
@@ -308,9 +373,10 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
                 () -> assertThat(createdOfferObject.salary()).isEqualTo("17 000 - 21 000 PLN")
         );
 
-//step 17: user made GET /offers with header “Authorization: Bearer AAAA.BBBB.CCC” and system returned OK(200) with 1 offer
+//step 17: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 1 offer
         // given && when
         ResultActions performGetOffersAfterPost = mockMvc.perform(get(offersEndpoint)
+                .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
         String fiveOffersJson = performGetOffersAfterPost.andExpect(status().isOk())

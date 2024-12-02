@@ -21,6 +21,21 @@ public class JobOfferScheduler {
     private static final String SAVED_NEW_OFFERS_MESSAGE = "Saved {} new offers";
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    /**
+     * Periodically fetches all offers from the HTTP client, then saves them in a repository.
+     * At each scheduled interval this method calls to OffersFacade#fetchAllThenSave, which:
+     * 1. Fetches the list of HttpResponseOfferDTOs,
+     * 2. Maps to Offer for each element,
+     * 3. Filters the elements of list given predicates:
+     *      - not null url,
+     *      - not empty url,
+     *      - not url already existing in the repository,
+     * 4. Saves filtered offers in the repository.
+     * 5. Returns a list of OfferResponseDto objects.
+     * Returned list is used to show information in logging.
+     * This method being scheduler's method does not return any values.
+     * @see OffersFacade#fetchAllThenSave
+     */
     @Scheduled(fixedDelayString = "${joboffers.scheduler.request.delay}")
     public void fetchAllOffersThenSave() {
         log.info(STARTED_FETCHING_MESSAGE, DATE_FORMAT.format(LocalDateTime.now()));
