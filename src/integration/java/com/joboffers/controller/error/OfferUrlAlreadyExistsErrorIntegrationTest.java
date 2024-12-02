@@ -2,6 +2,7 @@ package com.joboffers.controller.error;
 
 import com.joboffers.BaseIntegrationTest;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
@@ -26,6 +27,7 @@ public class OfferUrlAlreadyExistsErrorIntegrationTest extends BaseIntegrationTe
     }
 
     @Test
+    @WithMockUser
     public void should_return_409_conflict_when_user_posted_offer_with_existing_url() throws Exception {
         // step 1
         // given && when

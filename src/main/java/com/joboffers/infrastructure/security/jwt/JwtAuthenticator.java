@@ -42,8 +42,7 @@ public class JwtAuthenticator {
     }
 
     private String generateToken(User user) {
-        String secretKey = properties.secret();
-        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        Algorithm algorithm = Algorithm.HMAC256(properties.secret());
         Instant now = LocalDateTime.now(clock)
                 .toInstant(ZoneOffset.UTC);
         Instant expiresAt = now.plus(Duration.ofDays(properties.expirationDays()));

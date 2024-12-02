@@ -3,6 +3,7 @@ package com.joboffers.infrastructure.loginandregister.controller;
 import com.joboffers.domain.loginandregister.LoginAndRegisterFacade;
 import com.joboffers.domain.loginandregister.dto.RegisterResultDto;
 import com.joboffers.domain.loginandregister.dto.UserRegisterDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class RegisterRestController {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResultDto> register(@RequestBody UserRegisterDto userRegisterDto) {
+    public ResponseEntity<RegisterResultDto> register(@RequestBody @Valid UserRegisterDto userRegisterDto) {
         String encodedPassword = passwordEncoder.encode(userRegisterDto.password());
         RegisterResultDto registration = loginAndRegisterFacade.register(
                 new UserRegisterDto(userRegisterDto.username(), encodedPassword)

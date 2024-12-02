@@ -30,5 +30,5 @@ joboffers:
 auth:
   jwt:
     expiration-days: 30
-    secret: e8c3f1a728d49a75b3c428fbbf32a5e2f342b6d90e729178a134c6e5e8cafe9f5b3d3a8fc3e2494a6bde072c18f4b7d9e3a28bc7a91e42f5d71c38e5d9e3b2a4
+    secret: ${JWT_SECRET}
     issuer: job-offers-backend

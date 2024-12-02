@@ -2,9 +2,11 @@ package com.joboffers.apivalidation.error;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.joboffers.BaseIntegrationTest;
-import com.joboffers.infrastructure.offers.apivalidation.ApiValidationErrorDto;
+import com.joboffers.infrastructure.loginandregister.apivalidation.register.RegisterValidationErrorDto;
+import com.joboffers.infrastructure.offers.apivalidation.OfferValidationErrorDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
@@ -29,7 +31,8 @@ public class ApiValidationFailedIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    public void should_return_400_bad_request_and_validation_message_when_offer_save_request_has_null_and_empty() throws Exception {
+    @WithMockUser
+    public void should_return_400_bad_request_and_validation_message_when_authorized_offer_save_request_has_null_and_empty() throws Exception {
         // given
         // when
         ResultActions perform = mockMvc.perform(post("/offers")
@@ -40,13 +43,13 @@ public class ApiValidationFailedIntegrationTest extends BaseIntegrationTest {
                         "url": ""
                         }
                         """.trim())
-                .contentType(MediaType.APPLICATION_JSON_VALUE + ";charset=utf-8"));
+                .contentType(MediaType.APPLICATION_JSON_VALUE));
         // then
         String json = perform.andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        ApiValidationErrorDto result = objectMapper.readValue(json, new TypeReference<>() {});
+        OfferValidationErrorDto result = objectMapper.readValue(json, new TypeReference<>() {});
 
         assertThat(result.messages()).containsExactlyInAnyOrder(
                 "url must not be empty",
@@ -54,6 +57,53 @@ public class ApiValidationFailedIntegrationTest extends BaseIntegrationTest {
                 "position must not be empty",
                 "salary must not be null",
                 "salary must not be empty"
+        );
+    }
+
+    @Test
+    public void should_return_400_bad_request_and_validation_message_when_user_register_request_has_null_and_empty() throws Exception {
+        // given
+        // when
+        ResultActions perform = mockMvc.perform(post("/register")
+                .content("""
+                        {
+                            "username": ""
+                        }
+                        """.trim())
+                .contentType(MediaType.APPLICATION_JSON_VALUE));
+        // then
+        String json = perform.andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        RegisterValidationErrorDto result = objectMapper.readValue(json, new TypeReference<>() {});
+
+        assertThat(result.messages()).containsExactlyInAnyOrder(
+                "username must not be empty",
+                "password must not be null",
+                "password must not be empty"
+        );
+    }
+
+    @Test
+    public void should_return_400_bad_request_and_validation_message_when_generate_token_request_has_blank() throws Exception {
+        // given
+        // when
+        ResultActions perform = mockMvc.perform(post("/token")
+                .content("""
+                        {}
+                        """.trim())
+                .contentType(MediaType.APPLICATION_JSON_VALUE));
+        // then
+        String json = perform.andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        RegisterValidationErrorDto result = objectMapper.readValue(json, new TypeReference<>() {});
+
+        assertThat(result.messages()).containsExactlyInAnyOrder(
+                "username must not be blank",
+                "password must not be blank"
         );
     }
 }
