@@ -1,13 +1,10 @@
 package com.joboffers.domain.loginandregister.dto;
 
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 public record UserRegisterDto(
-        @NotNull(message = "{username.not.null}")
-        @NotEmpty(message = "{username.not.empty}")
+        @NotBlank(message = "{username.not.blank}")
         String username,
-        @NotNull(message = "{password.not.null}")
-        @NotEmpty(message = "{password.not.empty}")
+        @NotBlank(message = "{password.not.blank}")
         String password) {}

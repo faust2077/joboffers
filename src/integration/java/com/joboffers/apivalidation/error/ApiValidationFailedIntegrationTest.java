@@ -79,9 +79,8 @@ public class ApiValidationFailedIntegrationTest extends BaseIntegrationTest {
         RegisterValidationErrorDto result = objectMapper.readValue(json, new TypeReference<>() {});
 
         assertThat(result.messages()).containsExactlyInAnyOrder(
-                "username must not be empty",
-                "password must not be null",
-                "password must not be empty"
+                "username must not be blank",
+                "password must not be blank"
         );
     }
 
