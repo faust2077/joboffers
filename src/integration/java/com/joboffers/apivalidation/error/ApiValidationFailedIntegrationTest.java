@@ -1,7 +1,7 @@
 package com.joboffers.apivalidation.error;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.joboffers.BaseIntegrationTest;
+import com.joboffers.infrastructure.loginandregister.apivalidation.login.TokenValidationErrorDto;
 import com.joboffers.infrastructure.loginandregister.apivalidation.register.RegisterValidationErrorDto;
 import com.joboffers.infrastructure.offers.apivalidation.OfferValidationErrorDto;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ public class ApiValidationFailedIntegrationTest extends BaseIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        OfferValidationErrorDto result = objectMapper.readValue(json, new TypeReference<>() {});
+        OfferValidationErrorDto result = objectMapper.readValue(json, OfferValidationErrorDto.class);
 
         assertThat(result.messages()).containsExactlyInAnyOrder(
                 "url must not be empty",
@@ -76,7 +76,7 @@ public class ApiValidationFailedIntegrationTest extends BaseIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        RegisterValidationErrorDto result = objectMapper.readValue(json, new TypeReference<>() {});
+        RegisterValidationErrorDto result = objectMapper.readValue(json, RegisterValidationErrorDto.class);
 
         assertThat(result.messages()).containsExactlyInAnyOrder(
                 "username must not be blank",
@@ -98,7 +98,7 @@ public class ApiValidationFailedIntegrationTest extends BaseIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        RegisterValidationErrorDto result = objectMapper.readValue(json, new TypeReference<>() {});
+        TokenValidationErrorDto result = objectMapper.readValue(json, TokenValidationErrorDto.class);
 
         assertThat(result.messages()).containsExactlyInAnyOrder(
                 "username must not be blank",

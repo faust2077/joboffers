@@ -1,10 +1,18 @@
 
 
 spring:
+  cache:
+    type: redis
+    redis:
+      time-to-live: PT30M
   data:
     mongodb:
       uri: mongodb://admin:0@localhost:27017/joboffers-web
       auto-index-creation: true
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:63792}
+
   main:
     allow-bean-definition-overriding: true
   mvc:
