@@ -6,20 +6,12 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.utility.DockerImageName;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class OfferUrlAlreadyExistsErrorIntegrationTest extends BaseIntegrationTest {
-
-    @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(
-            DockerImageName.parse("mongo:4.0.10")
-    );
 
     @DynamicPropertySource
     public static void propertyOverride(DynamicPropertyRegistry registry) {

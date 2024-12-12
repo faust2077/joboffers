@@ -29,8 +29,7 @@ services:
       always
 
   redis-commander:
-    image:
-      - rediscommander/redis-commander:latest
+    image: rediscommander/redis-commander:latest
     restart: always
     environment:
       - REDIS_HOSTS=local:redis:6379

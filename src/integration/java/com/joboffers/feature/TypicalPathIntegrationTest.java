@@ -17,9 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -35,11 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class TypicalPathIntegrationTest extends BaseIntegrationTest implements SampleJobOfferDto {
 
-    @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(
-            DockerImageName.parse("mongo:4.0.10")
-    );
-
     @RegisterExtension
     public static WireMockExtension wireMockServer = WireMockExtension.newInstance()
             .options(wireMockConfig().dynamicPort())
@@ -50,6 +42,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
         registry.add("joboffers.offer-fetcher.http.client.config.uri", () -> WIRE_MOCK_HOST);
         registry.add("joboffers.offer-fetcher.http.client.config.port", () -> wireMockServer.getPort());
+        registry.add("spring.cache.type", () -> "redis");
     }
 
     @Autowired
@@ -61,11 +54,9 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
     @Test
     public void user_wants_to_see_offers_but_has_to_be_logged_in_and_external_server_should_have_some_offers() throws Exception {
 
-        final String offersEndpoint = "/offers";
-
-//step 1: there are no offers in external HTTP server (http://ec2-3-120-147-150.eu-central-1.compute.amazonaws.com:5057/offers)
+        //step 1: there are no offers in external HTTP server (http://ec2-3-120-147-150.eu-central-1.compute.amazonaws.com:5057/offers)
         // given && when && then
-        wireMockServer.stubFor(WireMock.get(offersEndpoint)
+        wireMockServer.stubFor(WireMock.get("/offers")
                 .willReturn(WireMock.aResponse()
                         .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", APPLICATION_JSON_VALUE)
@@ -105,7 +96,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 //step 4: user made GET /offers with no jwt token and system returned UNAUTHORIZED(401)
         // given && when
-        ResultActions performGetOffersWithNoToken = mockMvc.perform(get(offersEndpoint)
+        ResultActions performGetOffersWithNoToken = mockMvc.perform(get("/offers")
                 .contentType(APPLICATION_JSON_VALUE));
         // then
         performGetOffersWithNoToken.andExpect(status().isUnauthorized());
@@ -164,7 +155,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 //step 7: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 0 offers
         // given && when
-        ResultActions performGetOffersWhenOffersAbsent = mockMvc.perform(get(offersEndpoint)
+        ResultActions performGetOffersWhenOffersAbsent = mockMvc.perform(get("/offers")
                         .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
@@ -181,7 +172,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 //step 8: there are 2 new offers in external HTTP server
         // given && when && then
-        wireMockServer.stubFor(WireMock.get(offersEndpoint)
+        wireMockServer.stubFor(WireMock.get("/offers")
                 .willReturn(WireMock.aResponse()
                         .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", APPLICATION_JSON_VALUE)
@@ -205,7 +196,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 //step 10: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 2 offers with ids: id1 and id2
         // given && when
-        ResultActions performGetTwoOffersByIds = mockMvc.perform(get(offersEndpoint)
+        ResultActions performGetTwoOffersByIds = mockMvc.perform(get("/offers")
                 .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
@@ -241,7 +232,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 // step 11: user made GET /offers/11000 with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned NOT_FOUND(404) with message “Offer with id 11000 not found”
         // given
-        final String offers11000 = offersEndpoint + "/11000";
+        final String offers11000 = "/offers" + "/11000";
         // when
         ResultActions performGetOffersWithNotExistingId = mockMvc.perform(get(offers11000)
                 .header("Authorization", "Bearer " + token)
@@ -259,7 +250,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 //step 12: user made GET /offers/id1 with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with offer
         // given
         final String id1 = expectedFirstOffer.id();
-        final String offersId1Endpoint = offersEndpoint + '/' + id1;
+        final String offersId1Endpoint = "/offers" + '/' + id1;
         // when
         ResultActions performGetOffersById1 = mockMvc.perform(get(offersId1Endpoint)
                 .header("Authorization", "Bearer " + token)
@@ -277,7 +268,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 //step 13: there are 2 new offers in external HTTP server
         // given && when && then
-        wireMockServer.stubFor(WireMock.get(offersEndpoint)
+        wireMockServer.stubFor(WireMock.get("/offers")
                 .willReturn(WireMock.aResponse()
                         .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", APPLICATION_JSON_VALUE)
@@ -301,7 +292,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 //step 15: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 4 offers with ids: id1, id2, id3, id4
         // given && when
-        ResultActions performGetOffers = mockMvc.perform(get(offersEndpoint)
+        ResultActions performGetOffers = mockMvc.perform(get("/offers")
                 .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
@@ -344,7 +335,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 //step 16: user made POST /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned CREATED(201) with saved offer
         // given && when
-        ResultActions performPostOffers = mockMvc.perform(post(offersEndpoint)
+        ResultActions performPostOffers = mockMvc.perform(post("/offers")
                 .header("Authorization", "Bearer " + token)
                 .content("""
                         {
@@ -375,7 +366,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
 //step 17: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 1 offer
         // given && when
-        ResultActions performGetOffersAfterPost = mockMvc.perform(get(offersEndpoint)
+        ResultActions performGetOffersAfterPost = mockMvc.perform(get("/offers")
                 .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
