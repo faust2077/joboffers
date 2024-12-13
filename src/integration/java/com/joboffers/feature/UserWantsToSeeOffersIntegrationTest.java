@@ -19,10 +19,12 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -30,7 +32,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class TypicalPathIntegrationTest extends BaseIntegrationTest implements SampleJobOfferDto {
+
+public class UserWantsToSeeOffersIntegrationTest extends BaseIntegrationTest implements SampleJobOfferDto {
 
     @RegisterExtension
     public static WireMockExtension wireMockServer = WireMockExtension.newInstance()
@@ -43,6 +46,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         registry.add("joboffers.offer-fetcher.http.client.config.uri", () -> WIRE_MOCK_HOST);
         registry.add("joboffers.offer-fetcher.http.client.config.port", () -> wireMockServer.getPort());
         registry.add("spring.cache.type", () -> "redis");
+        registry.add("spring.cache.redis.time-to-live", () -> "PT1S");
     }
 
     @Autowired
@@ -54,7 +58,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
     @Test
     public void user_wants_to_see_offers_but_has_to_be_logged_in_and_external_server_should_have_some_offers() throws Exception {
 
-        //step 1: there are no offers in external HTTP server (http://ec2-3-120-147-150.eu-central-1.compute.amazonaws.com:5057/offers)
+//step 1: there are no offers in external HTTP server (http://ec2-3-120-147-150.eu-central-1.compute.amazonaws.com:5057/offers)
         // given && when && then
         wireMockServer.stubFor(WireMock.get("/offers")
                 .willReturn(WireMock.aResponse()
@@ -153,7 +157,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         );
 
 
-//step 7: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 0 offers
+//step 7: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 0 new offers
         // given && when
         ResultActions performGetOffersWhenOffersAbsent = mockMvc.perform(get("/offers")
                         .header("Authorization", "Bearer " + token)
@@ -168,7 +172,6 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
 
         assertThat(noOffers).isNotNull();
         assertThat(noOffers).isEmpty();
-
 
 //step 8: there are 2 new offers in external HTTP server
         // given && when && then
@@ -193,14 +196,33 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         assertThat(twoOffersInRepositoryList).hasSize(2);
         assertThat(twoOffersInRepositoryIdsList).doesNotContainNull();
 
+// step 10: user waits for cache to invalidate empty offers data and retrieve all offers from repository
+        // given && when && then
+        await().atMost(3, TimeUnit.SECONDS)
+                .pollInterval(200, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    String response = mockMvc.perform(get("/offers")
+                                    .header("Authorization", "Bearer " + token)
+                                    .contentType(APPLICATION_JSON_VALUE))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsString();
 
-//step 10: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 2 offers with ids: id1 and id2
+                    List<OfferResponseDto> offers = objectMapper.readValue(response, new TypeReference<>() {
+                    });
+                    assertThat(offers).isNotNull().isNotEmpty();
+                    assertThat(offers).hasSize(2);
+                });
+
+
+//step 11: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 2 offers with ids: id1 and id2
         // given && when
-        ResultActions performGetTwoOffersByIds = mockMvc.perform(get("/offers")
+        ResultActions performGetTwoOffersWithIds = mockMvc.perform(get("/offers")
                 .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON_VALUE));
         // then
-        String jsonWithTwoOffers = performGetTwoOffersByIds.andExpect(status().isOk())
+        String jsonWithTwoOffers = performGetTwoOffersWithIds.andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
@@ -230,7 +252,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         );
 
 
-// step 11: user made GET /offers/11000 with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned NOT_FOUND(404) with message “Offer with id 11000 not found”
+// step 12: user made GET /offers/11000 with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned NOT_FOUND(404) with message “Offer with id 11000 not found”
         // given
         final String offers11000 = "/offers" + "/11000";
         // when
@@ -247,7 +269,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
                         """.trim()));
 
 
-//step 12: user made GET /offers/id1 with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with offer
+//step 13: user made GET /offers/id1 with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with offer
         // given
         final String id1 = expectedFirstOffer.id();
         final String offersId1Endpoint = "/offers" + '/' + id1;
@@ -266,7 +288,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         assertThat(oneOffer).isEqualTo(expectedFirstOffer);
 
 
-//step 13: there are 2 new offers in external HTTP server
+//step 14: there are 2 new offers in external HTTP server
         // given && when && then
         wireMockServer.stubFor(WireMock.get("/offers")
                 .willReturn(WireMock.aResponse()
@@ -277,7 +299,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         );
 
 
-//step 14: scheduler ran 3rd time and made GET to external server and system added 2 new offers with some ids generated by db: id3 and id4 (where id3 != id4) to database
+//step 15: scheduler ran 3rd time and made GET to external server and system added 2 new offers with some ids generated by db: id3 and id4 (where id3 != id4) to database
         // given && when
         offersFetchingScheduler.fetchAllOffersThenSave();
         // then
@@ -290,7 +312,27 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
         assertThat(fourOffersInRepositoryIdsList).doesNotContainNull();
 
 
-//step 15: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 4 offers with ids: id1, id2, id3, id4
+//step 16: user waited for cache to invalidate 2 offers with ids: id1 and id2 stale data and retrieve all offers from repository
+        // given && when && then
+        await().atMost(3, TimeUnit.SECONDS)
+                .pollInterval(200, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    String response = mockMvc.perform(get("/offers")
+                                    .header("Authorization", "Bearer " + token)
+                                    .contentType(APPLICATION_JSON_VALUE))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsString();
+
+                    List<OfferResponseDto> offers = objectMapper.readValue(response, new TypeReference<>() {
+                    });
+                    assertThat(offers).isNotNull().isNotEmpty();
+                    assertThat(offers).hasSize(4);
+                });
+
+
+//step 17: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 4 offers with ids: id1, id2, id3, id4
         // given && when
         ResultActions performGetOffers = mockMvc.perform(get("/offers")
                 .header("Authorization", "Bearer " + token)
@@ -333,7 +375,7 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
                         expectedOffer2.url())
         );
 
-//step 16: user made POST /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned CREATED(201) with saved offer
+//step 18: user made POST /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned CREATED(201) with saved offer
         // given && when
         ResultActions performPostOffers = mockMvc.perform(post("/offers")
                 .header("Authorization", "Bearer " + token)
@@ -364,7 +406,26 @@ public class TypicalPathIntegrationTest extends BaseIntegrationTest implements S
                 () -> assertThat(createdOfferObject.salary()).isEqualTo("17 000 - 21 000 PLN")
         );
 
-//step 17: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 1 offer
+//step 19: user waited for cache to invalidate 4 offers with ids: id1, id2, id3 and id4 stale data and retrieve all offers from repository
+        // given && when && then
+        await().atMost(3, TimeUnit.SECONDS)
+                .pollInterval(200, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    String response = mockMvc.perform(get("/offers")
+                                    .header("Authorization", "Bearer " + token)
+                                    .contentType(APPLICATION_JSON_VALUE))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsString();
+
+                    List<OfferResponseDto> offers = objectMapper.readValue(response, new TypeReference<>() {
+                    });
+                    assertThat(offers).isNotNull().isNotEmpty();
+                    assertThat(offers).hasSize(5);
+                });
+
+//step 20: user made GET /offers with header "Authorization: Bearer AAAA.BBBB.CCC" and system returned OK(200) with 1 offer
         // given && when
         ResultActions performGetOffersAfterPost = mockMvc.perform(get("/offers")
                 .header("Authorization", "Bearer " + token)
