@@ -1,9 +1,9 @@
 package com.joboffers.domain.offers;
 
-import com.joboffers.domain.offers.dto.JobOfferDto;
+import com.joboffers.domain.offers.dto.HttpResponseOfferDto;
 
 import java.util.List;
 
-interface OfferFetcher {
-    List<JobOfferDto> remoteFetchAll();
+public interface OfferFetcher {
+    List<HttpResponseOfferDto> remoteFetchAll();
 }

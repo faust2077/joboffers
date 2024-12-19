@@ -1,0 +1,42 @@
+
+
+spring:
+  cache:
+    type: redis
+    redis:
+      time-to-live: PT30M
+  data:
+    mongodb:
+      uri: mongodb://admin:0@localhost:27017/joboffers-web
+      auto-index-creation: true
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:63792}
+
+  main:
+    allow-bean-definition-overriding: true
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+
+scheduling:
+  enabled: true
+
+joboffers:
+  scheduler:
+    request:
+      delay: PT3H
+  offer-fetcher:
+    http:
+      client:
+        config:
+          connectionTimeout: 10000
+          readTimeout: 10000
+          port: 5057
+          uri: http://ec2-3-120-147-150.eu-central-1.compute.amazonaws.com
+
+auth:
+  jwt:
+    expiration-days: 30
+    secret: ${JWT_SECRET}
+    issuer: job-offers-backend

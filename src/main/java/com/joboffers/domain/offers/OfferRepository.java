@@ -1,19 +1,20 @@
 package com.joboffers.domain.offers;
 
+import com.joboffers.domain.offers.dto.OfferResponseDto;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
-import java.util.Optional;
 
-interface OfferRepository
+@Repository
+public interface OfferRepository extends MongoRepository<Offer, String>
 {
-    Offer save(Offer offer);
-
-    Optional<Offer> getById(String id);
-
-    boolean existsById(String id);
-
     boolean existsByUrl(String url);
 
-    List<Offer> getAll();
-
-    List<Offer> saveAll(List<Offer> offers);
+    default List<OfferResponseDto> findAllMappedToOfferResponseDto() {
+        return this.findAll()
+                .stream()
+                .map(OfferMapper::mapFromOfferToOfferResponseDto)
+                .toList();
+    }
 }

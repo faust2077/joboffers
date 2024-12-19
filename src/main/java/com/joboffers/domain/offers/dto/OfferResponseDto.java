@@ -2,6 +2,8 @@ package com.joboffers.domain.offers.dto;
 
 import lombok.Builder;
 
+import java.io.Serializable;
+
 /**
  * Dto representing a job offer fetched from repository.
  * @param id
@@ -11,4 +13,10 @@ import lombok.Builder;
  * @param url
  */
 @Builder
-public record OfferResponseDto(String id, String companyName, String position, String salary, String url) {}
+public record OfferResponseDto(
+        String id,
+        String companyName,
+        String position,
+        String salary,
+        String url
+) implements Serializable {}

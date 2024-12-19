@@ -21,11 +21,12 @@ class OffersFetchAndSaveService {
     private Stream<Offer> fetchAll() {
         return offerFetcher.remoteFetchAll()
                 .stream()
-                .map(OfferMapper::mapFromJobOfferDtoToOffer);
+                .map(OfferMapper::mapFromHttpResponseOfferDtoToOffer);
     }
 
     private boolean isNotExistingOffer(Offer offer) {
-        return !offer.url().isEmpty() && !offerRepository.existsByUrl(offer.url());
+        String url = offer.url();
+        return url != null && !url.isEmpty() && !offerRepository.existsByUrl(url);
     }
 
 }
